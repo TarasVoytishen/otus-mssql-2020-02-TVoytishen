@@ -32,20 +32,7 @@ where
 select 
 	so.*, 
 	
-	case  MONTH(so.OrderDate)
-		when 1 then 'January'
-		when 2 then 'Febrary'
-		when 3 then 'Marth'
-		when 4 then 'April'
-		when 5 then 'May'
-		when 6 then 'June'
-		when 7 then 'July'
-		when 8 then 'August'
-		when 9 then 'September'
-		when 10 then 'October'
-		when 11 then 'November'
-		when 11 then 'December'
-	end as [MonthName],
+	DATENAME(month,so.OrderDate),
 
 	case  
 		when MONTH(so.OrderDate) in(1,2,3,4) then '1_third'
@@ -55,12 +42,34 @@ select
 	
 from
 	Sales.Orders so
+
+	inner join 
+		(select distinct
+			sol_inner_1.OrderID 
+		from 
+			Sales.OrderLines as sol_inner_1 
+		where isnull(sol_inner_1.UnitPrice,9)>100
+
+		union 
+		
+		select distinct
+			sol_inner_2.OrderID
+		from 
+			Sales.OrderLines as sol_inner_2
+		group by 
+			sol_inner_2.OrderID 
+		having 
+			sum(sol_inner_2.Quantity)>20
+
+		) as sol1
+		on sol1.OrderID=so.OrderID
+
 where 
 	so.PickingCompletedWhen is not null
-	and
+	/*and
 	(so.OrderID in (select sol.OrderID from Sales.OrderLines as sol where isnull(sol.UnitPrice,9)>100 ) 
 	or 
-	so.OrderID in  (select sol.OrderID/*, sum(sol.Quantity)*/ from Sales.OrderLines as sol group by sol.OrderID having sum(sol.Quantity)>20))
+	so.OrderID in  (select sol.OrderID/*, sum(sol.Quantity)*/ from Sales.OrderLines as sol group by sol.OrderID having sum(sol.Quantity)>20))*/
 order by 
 	datepart(quarter,so.OrderDate),
 	ThirdOfYear,
@@ -68,23 +77,10 @@ order by
 	; 
 
 	
-	select 
+select 
 	so.*, 
 	
-	case  MONTH(so.OrderDate)
-		when 1 then 'January'
-		when 2 then 'Febrary'
-		when 3 then 'Marth'
-		when 4 then 'April'
-		when 5 then 'May'
-		when 6 then 'June'
-		when 7 then 'July'
-		when 8 then 'August'
-		when 9 then 'September'
-		when 10 then 'October'
-		when 11 then 'November'
-		when 11 then 'December'
-	end as [MonthName],
+	DATENAME(month,so.OrderDate),
 
 	case  
 		when MONTH(so.OrderDate) in(1,2,3,4) then '1_third'
@@ -94,17 +90,39 @@ order by
 	
 from
 	Sales.Orders so
+
+	inner join 
+		(select distinct
+			sol_inner_1.OrderID 
+		from 
+			Sales.OrderLines as sol_inner_1 
+		where isnull(sol_inner_1.UnitPrice,9)>100
+
+		union 
+		
+		select distinct
+			sol_inner_2.OrderID
+		from 
+			Sales.OrderLines as sol_inner_2
+		group by 
+			sol_inner_2.OrderID 
+		having 
+			sum(sol_inner_2.Quantity)>20
+
+		) as sol1
+		on sol1.OrderID=so.OrderID
+
 where 
 	so.PickingCompletedWhen is not null
-	and
+	/*and
 	(so.OrderID in (select sol.OrderID from Sales.OrderLines as sol where isnull(sol.UnitPrice,9)>100 ) 
 	or 
-	so.OrderID in  (select sol.OrderID/*, sum(sol.Quantity)*/ from Sales.OrderLines as sol group by sol.OrderID having sum(sol.Quantity)>20))
+	so.OrderID in  (select sol.OrderID/*, sum(sol.Quantity)*/ from Sales.OrderLines as sol group by sol.OrderID having sum(sol.Quantity)>20))*/
 order by 
 	datepart(quarter,so.OrderDate),
 	ThirdOfYear,
 	so.OrderDate
-offset 1000 rows fetch next 100 rows only
+	offset 1000 rows fetch next 100 rows only
 	; 
 
 
@@ -129,7 +147,7 @@ from
 		Application.People p
 			on po.ContactPersonID=p.PersonID
 where 
-	po.IsOrderFinalized=1 
+	po.IsOrderFinalized=1; 
 
 
 
@@ -145,11 +163,12 @@ from
 		on so.SalespersonPersonID=p.PersonID
 	
 order by 
-	so.OrderDate desc
+	so.OrderDate desc;
 
 
 --6. Все ид и имена клиентов и их контактные телефоны, которые покупали товар Chocolate frogs 250g
 
+/*
 select sc.CustomerID,sc.CustomerName,ap.PhoneNumber
 from
 Sales.Customers as sc
@@ -165,4 +184,26 @@ inner join
 		on sc.CustomerID=SpecSales.CustomerID
 inner join 
 	Application.People ap
-	on SpecSales.ContactPersonID=ap.PersonID
+	on SpecSales.ContactPersonID=ap.PersonID;
+*/
+
+--этот вариант быстрее
+select sc.CustomerID,sc.CustomerName,ap.PhoneNumber
+from
+Sales.Customers as sc
+	
+inner join Sales.Orders as so
+		on sc.CustomerID=so.CustomerID
+
+--
+inner join Sales.OrderLines as sol
+		on sol.OrderID=so.OrderID
+
+--отобрали по товару
+inner join Warehouse.StockItems as wsi
+		on sol.StockItemID=wsi.StockItemID and wsi.StockItemName='Chocolate frogs 250g'
+
+inner join 
+	Application.People ap
+	on so.ContactPersonID=ap.PersonID;
+
