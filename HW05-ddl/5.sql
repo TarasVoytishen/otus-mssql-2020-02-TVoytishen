@@ -178,8 +178,8 @@ go
 	price decimal(15,2)  null,
 	quantity decimal(15,3) not null,
 	supplier_id int null,
-	date_time datetime not null CHECK  (
-		date_time<=GETDATE() -- не может быть будущим числом
+	date_time datetime2 not null CHECK  (
+		date_time<=SYSDATETIME() -- не может быть будущим числом
 	)
  
 	constraint [PK_incomes] primary key clustered
@@ -211,8 +211,8 @@ go
 	doc_id int not null,
 	sku_id int not null FOREIGN KEY REFERENCES sku(id),
 	quantity decimal(15,3) not null,
-	date_time datetime not null CHECK  (
-		date_time<=GETDATE() -- не может быть будущим числом
+	date_time datetime2 not null CHECK  (
+		date_time<=SYSDATETIME() -- не может быть будущим числом
 	)
  
 	constraint [PK_outcomes] primary key clustered
@@ -249,8 +249,8 @@ go
 	price decimal(15,2) not null,
 	quantity decimal(15,3) not null,
 	customer_id	int not null FOREIGN KEY REFERENCES customers(id),
-	date_time datetime not null CHECK  (
-		date_time<=GETDATE() -- не может быть будущим числом
+	date_time datetime2 not null CHECK  (
+		date_time<=SYSDATETIME() -- не может быть будущим числом
 	)
  
 	constraint [PK_sales] primary key clustered
@@ -296,7 +296,7 @@ go
 	),
 	quantity decimal(15,3) not null,
 	customer_id	int not null FOREIGN KEY REFERENCES customers(id),
-	date_time datetime not null
+	date_time datetime2 not null
  
 	constraint [PK_returns] primary key clustered
 	(
