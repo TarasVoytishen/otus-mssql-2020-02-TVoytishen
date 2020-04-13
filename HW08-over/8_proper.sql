@@ -14,7 +14,10 @@
 --2015-02-03 9626342.98
 --ѕродажи можно вз€ть из таблицы Invoices.
 --Ќарастающий итог должен быть без оконной функции.
-SET STATISTICS TIME ON;
+--SET STATISTICS TIME ON;
+
+
+declare @time_1 datetime2=sysdatetime();
 
 
 
@@ -50,6 +53,8 @@ drop table if exists #total_sales_month;
 drop table if exists #total_sales_month_inflate;
 
 /**********************************************************/
+declare @time_2 datetime2=sysdatetime();
+
 --c табличной переменной (все то же самое)
 declare @total_sales_month TABLE ([year] int, [month] int, total_sum decimal(18,2));
 
@@ -82,6 +87,7 @@ order by si.InvoiceDate,si.InvoiceID;
 
 --2. ≈сли вы брали предложенный выше запрос, то сделайте расчет суммы нарастающим итогом с помощью оконной функции.
 --—равните 2 варианта запроса - через windows function и без них. Ќаписать какой быстрее выполн€етс€, сравнить по set statistics time on;
+declare @time_3 datetime2=sysdatetime();
 
 select si.InvoiceID ,sum(sil.UnitPrice*sil.Quantity) over(partition by si.InvoiceID) as InvoiceSum ,si.InvoiceDate, sc.CustomerName, sum(sil.UnitPrice*sil.Quantity) over (order by year(si.InvoiceDate)+month(si.InvoiceDate)/100.0 range UNBOUNDED PRECEDING)
 from Sales.Invoices si
@@ -89,7 +95,16 @@ join Sales.Customers sc on sc.CustomerID=si.CustomerID
 join Sales.InvoiceLines sil on si.InvoiceID=sil.InvoiceID
 where si.InvoiceDate >= '2015-01-01'
 order by si.InvoiceDate,si.InvoiceID;
-SET STATISTICS TIME OFF;
+--SET STATISTICS TIME OFF;
+
+declare @time_4 datetime2=sysdatetime();
+
+--выводим сколько по времени выводились варианты
+select 
+	DATEDIFF(ms,@time_1,@time_2) as [¬ариант—¬ременной“аблицей],
+	DATEDIFF(ms,@time_2,@time_3) as [¬ариант—“абличнойѕеременной],
+	DATEDIFF(ms,@time_3,@time_4) as [„ерезќконные‘ункции]
+
 
 --2. ¬ывести список 2х самых попул€рных продуктов (по кол-ву проданных) в каждом мес€це за 2016й год (по 2 самых попул€рных продукта в каждом мес€це)
 
@@ -197,6 +212,29 @@ from(
 	join Sales.Customers sc on sc.CustomerID=si.CustomerID) all_sales
 where
 	all_sales.cost_rank in (1,2);
+
+--вариант с CTE (чуть удобнее читать)
+with all_sales
+as
+(	select distinct 
+		sc.CustomerID,
+		sc.CustomerName,
+		sil.StockItemID,
+		sil.UnitPrice,
+		--si.InvoiceDate as InvDate,
+		last_value(si.InvoiceDate) over (partition by sc.CustomerID,sil.StockItemID order by si.InvoiceDate,si.InvoiceID ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) as InvoiceDate,
+		DENSE_RANK  () over (partition by sc.CustomerID order by sil.UnitPrice desc) as cost_rank
+	from Sales.InvoiceLines sil
+	join Sales.Invoices si on si.InvoiceID=sil.InvoiceID
+	join Sales.Customers sc on sc.CustomerID=si.CustomerID)
+select
+	CustomerID,
+	CustomerName,
+	StockItemID,
+	UnitPrice,
+	InvoiceDate
+from all_sales
+where cost_rank in (1,2);
 
 
 
