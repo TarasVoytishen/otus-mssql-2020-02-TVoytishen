@@ -87,9 +87,9 @@
 --סמחהאול בה
 CREATE DATABASE otus_project
  ON  PRIMARY 
-( NAME = N'otus_project', FILENAME='D:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\otus_project.mdf', SIZE = 8192KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
+( NAME = N'otus_project', FILENAME='C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\otus_project.mdf', SIZE = 8192KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
  LOG ON 
-( NAME = N'otus_project_log',FILENAME='D:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\otus_project.ldf', SIZE = 8192KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB );
+( NAME = N'otus_project_log',FILENAME='C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\otus_project.ldf', SIZE = 8192KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB );
  GO
 
 
